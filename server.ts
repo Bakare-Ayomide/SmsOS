@@ -38,106 +38,9 @@ interface DbStore {
 
 // Default/mock data for onboarding and preview testing
 const DEFAULT_STORE: DbStore = {
-  users: [
-    {
-      id: "usr_acme",
-      name: "Acme Logistics Corp",
-      email: "billing@acme-logistics.com",
-      subscriptionTier: "pro",
-      subscriptionStatus: "active",
-      gatewayQuota: 5,
-      smsLimitMonthly: 10000,
-      smsSentThisMonth: 1420,
-      remoteAppVersion: "2.4.5",
-      remotePollingInterval: 5,
-      createdAt: new Date(Date.now() - 30 * 24 * 3600000).toISOString(), // 30 days ago
-      lastActive: new Date().toISOString()
-    },
-    {
-      id: "usr_global",
-      name: "Global Tech Retailers",
-      email: "devops@globalretail.io",
-      subscriptionTier: "enterprise",
-      subscriptionStatus: "active",
-      gatewayQuota: 20,
-      smsLimitMonthly: 50000,
-      smsSentThisMonth: 12480,
-      remoteAppVersion: "2.5.0",
-      remotePollingInterval: 3,
-      createdAt: new Date(Date.now() - 15 * 24 * 3600000).toISOString(), // 15 days ago
-      lastActive: new Date().toISOString()
-    },
-    {
-      id: "usr_sandburg",
-      name: "Mark Sandburg (Free Trial)",
-      email: "mark.sandburg@gmail.com",
-      subscriptionTier: "free",
-      subscriptionStatus: "canceled",
-      gatewayQuota: 1,
-      smsLimitMonthly: 100,
-      smsSentThisMonth: 82,
-      remoteAppVersion: "1.9.0",
-      remotePollingInterval: 15,
-      createdAt: new Date(Date.now() - 45 * 24 * 3600000).toISOString(), // 45 days ago
-      lastActive: new Date(Date.now() - 5 * 24 * 3600000).toISOString()
-    }
-  ],
-  gateways: [
-    {
-      id: "gw_acme_1",
-      name: "Acme Delivery Terminal 1 (Pixel 8)",
-      token: "gt_token_acme_pixel8_secret",
-      ownerId: "usr_acme",
-      status: "online",
-      lastPing: new Date().toISOString(),
-      battery: 89,
-      signal: "excellent",
-      sim1Carrier: "T-Mobile USA",
-      sim2Carrier: "None",
-      sim1Number: "+1 (555) 019-9001",
-      sim2Number: ""
-    },
-    {
-      id: "gw_global_1",
-      name: "Global HQ Primary Node (Galaxy S23)",
-      token: "gt_token_global_hq_secret",
-      ownerId: "usr_global",
-      status: "online",
-      lastPing: new Date().toISOString(),
-      battery: 94,
-      signal: "good",
-      sim1Carrier: "Verizon Wireless",
-      sim2Carrier: "AT&T Mobility",
-      sim1Number: "+1 (555) 014-4422",
-      sim2Number: "+1 (555) 014-4423"
-    }
-  ],
-  messages: [
-    {
-      id: "msg_acme_1",
-      to: "+1 (555) 012-3456",
-      message: "Your Acme delivery is scheduled for today between 2 PM and 4 PM.",
-      type: "outbox",
-      gatewayId: "gw_acme_1",
-      simSlot: 1,
-      status: "delivered",
-      createdAt: new Date(Date.now() - 3600000).toISOString(),
-      sentAt: new Date(Date.now() - 3598000).toISOString(),
-      deliveredAt: new Date(Date.now() - 3580000).toISOString(),
-      priority: "high"
-    },
-    {
-      id: "msg_global_1",
-      from: "+1 (555) 014-4422",
-      message: "Gateway test ping back successful.",
-      type: "inbox",
-      gatewayId: "gw_global_1",
-      simSlot: 1,
-      status: "delivered",
-      createdAt: new Date(Date.now() - 1800000).toISOString(),
-      priority: "normal"
-    }
-  ],
+  users: [],
+  gateways: [],
+  messages: [],
   apiKeys: [
     {
       id: "key_1",
@@ -571,8 +474,11 @@ app.get("/api/download/sms-os-gateway.apk", (req, res) => {
   const branch = db.githubBranch || "main";
 
   // 0. Check for custom configured APK URL (priority)
-  const envApkUrl = process.env.CUSTOM_APK_URL || process.env.VITE_CUSTOM_APK_URL;
-  const customApkUrl = db.customApkUrl || envApkUrl;
+  const envApkUrl = process.env.CUSTOM_APK_URL || 
+                    process.env.DOWNLOAD_URL || 
+                    process.env.APK_DOWNLOAD_URL || 
+                    process.env.VITE_CUSTOM_APK_URL;
+  const customApkUrl = envApkUrl || db.customApkUrl;
 
   if (customApkUrl) {
     console.log(`[Download Engine] Redirecting download request to custom APK URL: ${customApkUrl}`);

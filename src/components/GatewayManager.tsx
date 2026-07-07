@@ -18,7 +18,8 @@ import {
   X, 
   CheckCircle2, 
   Loader2,
-  Cpu
+  Cpu,
+  Download
 } from "lucide-react";
 
 interface GatewayManagerProps {
@@ -37,6 +38,7 @@ export default function GatewayManager({ gateways, onReload }: GatewayManagerPro
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [createdGateway, setCreatedGateway] = useState<Gateway | null>(null);
   const [copiedText, setCopiedText] = useState<string | null>(null);
+  const [viewingQrGateway, setViewingQrGateway] = useState<Gateway | null>(null);
 
   const handleCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
@@ -118,13 +120,25 @@ export default function GatewayManager({ gateways, onReload }: GatewayManagerPro
           </p>
         </div>
 
-        <button
-          onClick={() => { setShowAddWizard(true); setCreatedGateway(null); }}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2 px-4 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer border border-indigo-500/10 shadow-lg shadow-indigo-600/10"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add Gateway</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <a
+            href="/api/download/sms-os-gateway.apk"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs py-2 px-3.5 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer border border-slate-250 hover:border-slate-300 shadow-xs"
+          >
+            <Download className="w-3.5 h-3.5 text-slate-600" />
+            <span>Download APK</span>
+          </a>
+
+          <button
+            onClick={() => { setShowAddWizard(true); setCreatedGateway(null); }}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2 px-4 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer border border-indigo-500/10 shadow-lg shadow-indigo-600/10"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add Gateway</span>
+          </button>
+        </div>
       </div>
 
       {/* Gateway Devices Grid */}
@@ -203,8 +217,16 @@ export default function GatewayManager({ gateways, onReload }: GatewayManagerPro
                   </div>
 
                   <button
+                    onClick={() => setViewingQrGateway(gw)}
+                    className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer ml-2"
+                    title="View pairing QR Code"
+                  >
+                    <QrCode className="w-3.5 h-3.5" />
+                  </button>
+
+                  <button
                     onClick={() => handleDeleteGateway(gw.id)}
-                    className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer ml-2"
+                    className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer ml-1"
                     title="Delete gateway record"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -348,7 +370,16 @@ export default function GatewayManager({ gateways, onReload }: GatewayManagerPro
                     
                     <ol className="list-decimal pl-4.5 space-y-2.5">
                       <li>
-                        Download and install the <code className="bg-slate-100 p-0.5 font-mono text-indigo-600">SMS-Gateway-Daemon.apk</code> on your physical Android phone.
+                        Download and install the{' '}
+                        <a 
+                          href="/api/download/sms-os-gateway.apk" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="font-bold text-indigo-600 hover:text-indigo-800 underline hover:no-underline"
+                        >
+                          SMS-Gateway-Daemon.apk
+                        </a>{' '}
+                        on your physical Android phone.
                       </li>
                       <li>
                         Open the APK. Under Connection settings, set the Server API Endpoint to:
@@ -387,11 +418,19 @@ export default function GatewayManager({ gateways, onReload }: GatewayManagerPro
                     <span className="font-bold uppercase text-slate-500 tracking-wider text-[10px] mb-3">Coupling QR Code Scan</span>
                     
                     {/* Visual QR element */}
-                    <div className="bg-white p-3 border border-slate-200 rounded-xl shadow-xs relative">
-                      <QrCode className="w-32 h-32 text-slate-900" />
-                      <div className="absolute inset-0 flex items-center justify-center opacity-10 bg-slate-950/20">
-                        <Smartphone className="w-8 h-8 text-indigo-600" />
-                      </div>
+                    <div className="bg-white p-3 border border-slate-200 rounded-xl shadow-md relative">
+                      <img 
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(
+                          JSON.stringify({
+                            serverUrl: serverUrl,
+                            gatewayId: createdGateway.id,
+                            gatewayToken: createdGateway.token
+                          })
+                        )}`}
+                        alt="Pairing QR Code"
+                        className="w-36 h-36"
+                        referrerPolicy="no-referrer"
+                      />
                     </div>
                     
                     <p className="text-[10px] text-slate-400 mt-3 leading-normal max-w-[200px]">
@@ -408,6 +447,81 @@ export default function GatewayManager({ gateways, onReload }: GatewayManagerPro
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Existing Gateway QR Code Modal Overlay */}
+      {viewingQrGateway && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-xl w-full max-w-md p-6 flex flex-col gap-4 relative">
+            <button
+              onClick={() => setViewingQrGateway(null)}
+              className="absolute right-4 top-4 p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="border-b border-slate-100 pb-3">
+              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <QrCode className="w-5 h-5 text-indigo-600" />
+                Gateway Pairing QR Code
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">
+                Scan this code from the <strong>SMS-Gateway APK</strong> on your phone to connect <strong>{viewingQrGateway.name}</strong> instantly.
+              </p>
+            </div>
+
+            <div className="flex flex-col items-center justify-center p-4 bg-slate-50 border border-slate-100 rounded-xl">
+              <div className="bg-white p-3.5 border border-slate-200 rounded-xl shadow-md relative">
+                <img 
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
+                    JSON.stringify({
+                      serverUrl: serverUrl,
+                      gatewayId: viewingQrGateway.id,
+                      gatewayToken: viewingQrGateway.token
+                    })
+                  )}`}
+                  alt="Pairing QR Code"
+                  className="w-44 h-44"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+              <span className="text-[10px] text-slate-400 font-mono mt-3 break-all text-center">
+                ID: {viewingQrGateway.id}
+              </span>
+            </div>
+
+            <div className="space-y-2.5 text-xs text-slate-600">
+              <div className="flex flex-col gap-1">
+                <span className="font-bold text-slate-500 text-[10px] uppercase">Manual Credentials</span>
+                <div className="bg-slate-50 p-2 border border-slate-155 rounded-lg font-mono text-[10px] flex items-center justify-between">
+                  <span className="truncate mr-2">Endpoint: {serverUrl}</span>
+                  <button
+                    onClick={() => handleCopy(serverUrl, 'server-url-view')}
+                    className="p-1 text-slate-400 hover:text-indigo-600 cursor-pointer shrink-0"
+                  >
+                    {copiedText === 'server-url-view' ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+                  </button>
+                </div>
+                <div className="bg-slate-50 p-2 border border-slate-155 rounded-lg font-mono text-[10px] flex items-center justify-between">
+                  <span className="truncate mr-2">Pairing Token: {viewingQrGateway.token}</span>
+                  <button
+                    onClick={() => handleCopy(viewingQrGateway.token, 'token-view')}
+                    className="p-1 text-slate-400 hover:text-indigo-600 cursor-pointer shrink-0"
+                  >
+                    {copiedText === 'token-view' ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setViewingQrGateway(null)}
+              className="w-full bg-slate-900 hover:bg-slate-850 text-white font-bold text-xs py-2.5 rounded-xl transition-all cursor-pointer text-center mt-1"
+            >
+              Done
+            </button>
           </div>
         </div>
       )}

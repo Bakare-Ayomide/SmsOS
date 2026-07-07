@@ -6,7 +6,6 @@
 import { useState, useEffect } from "react";
 import { Capacitor } from "@capacitor/core";
 import { Gateway, Message, ApiKey, Webhook, WebhookLog, DashboardStats } from "./types";
-import PhoneSimulator from "./components/PhoneSimulator";
 import DeveloperApiDocs from "./components/DeveloperApiDocs";
 import WebhookManager from "./components/WebhookManager";
 import SmsDispatcher from "./components/SmsDispatcher";
@@ -47,7 +46,6 @@ export default function App() {
   }
 
   const [activeTab, setActiveTab] = useState<'gateways' | 'dispatcher' | 'logs' | 'webhooks' | 'developer' | 'admin'>('gateways');
-  const [showSimulator, setShowSimulator] = useState<boolean>(true);
   const [isResetting, setIsResetting] = useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
 
@@ -168,29 +166,6 @@ export default function App() {
 
           {/* Action Toolbar buttons */}
           <div className="flex items-center gap-2 sm:gap-2.5">
-            {/* Quick Simulator Visibility Toggle */}
-            <button
-              onClick={() => setShowSimulator(!showSimulator)}
-              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 py-2 px-2.5 sm:px-3 text-xs font-semibold rounded-xl border transition-all cursor-pointer ${
-                showSimulator
-                  ? "bg-indigo-600/10 hover:bg-indigo-600/20 border-indigo-500/30 text-indigo-300"
-                  : "bg-slate-800 hover:bg-slate-750 border-slate-700/50 text-slate-300 hover:text-white"
-              }`}
-              title={showSimulator ? "Hide Phone Simulator" : "Show Phone Simulator"}
-            >
-              {showSimulator ? (
-                <>
-                  <EyeOff className="w-3.5 h-3.5 shrink-0" />
-                  <span className="inline sm:inline">Hide Simulator</span>
-                </>
-              ) : (
-                <>
-                  <Eye className="w-3.5 h-3.5 shrink-0" />
-                  <span className="inline sm:inline">Show Simulator</span>
-                </>
-              )}
-            </button>
-
             {/* Manual Sync reload */}
             <button
               onClick={refreshAllData}
@@ -306,11 +281,11 @@ export default function App() {
           </div>
         </section>
 
-        {/* Tab Routing and Workspace Area split with Collapsible Android Simulator */}
-        <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Tab Routing and Workspace Area */}
+        <section className="grid grid-cols-1 gap-6 items-start">
           
-          {/* Left panel: SaaS Navigation Tabs & Main Workspace Component */}
-          <div className={`flex flex-col gap-5 ${showSimulator ? "lg:col-span-8 col-span-12" : "col-span-12"}`}>
+          {/* SaaS Navigation Tabs & Main Workspace Component */}
+          <div className="flex flex-col gap-5 col-span-12">
             
             {/* Primary Navigation tab rail */}
             <div className="flex items-center overflow-x-auto bg-white border border-slate-200 p-1 rounded-2xl shadow-xs gap-1 scrollbar-none">
@@ -434,16 +409,6 @@ export default function App() {
               )}
             </div>
           </div>
-
-          {/* Right panel: Collapsible Virtual Android APK Device Console */}
-          {showSimulator && (
-            <div className="lg:col-span-4 col-span-12 h-full lg:sticky lg:top-24">
-              <PhoneSimulator 
-                gateways={gateways} 
-                onActionTriggered={refreshAllData} 
-              />
-            </div>
-          )}
 
         </section>
 

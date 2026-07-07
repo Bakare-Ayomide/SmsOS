@@ -53,6 +53,7 @@ export default function SaaSAdminPanel({ gateways, onReload }: SaaSAdminPanelPro
   const [githubLastPush, setGithubLastPush] = useState<string | null>(null);
   const [githubLogs, setGithubLogs] = useState<string[]>([]);
   const [hasToken, setHasToken] = useState(false);
+  const [customApkUrl, setCustomApkUrl] = useState("");
   const [isSavingGit, setIsSavingGit] = useState(false);
   const [isPushingCode, setIsPushingCode] = useState(false);
   const [showToken, setShowToken] = useState(false);
@@ -69,6 +70,7 @@ export default function SaaSAdminPanel({ gateways, onReload }: SaaSAdminPanelPro
         setGithubLastPush(data.githubLastPush);
         setGithubLogs(data.githubLogs || []);
         setHasToken(data.hasToken);
+        setCustomApkUrl(data.customApkUrl || "");
       }
     } catch (err) {
       console.error("Error loading GitHub configuration:", err);
@@ -104,8 +106,8 @@ export default function SaaSAdminPanel({ gateways, onReload }: SaaSAdminPanelPro
 
   const handleSaveGitConfig = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!githubRepo.trim()) {
-      setGitFeedback({ type: 'error', message: "Repository URL / name cannot be empty." });
+    if (!githubRepo.trim() && !customApkUrl.trim()) {
+      setGitFeedback({ type: 'error', message: "Repository URL or Custom APK Download URL must be filled out." });
       return;
     }
 
@@ -116,9 +118,10 @@ export default function SaaSAdminPanel({ gateways, onReload }: SaaSAdminPanelPro
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          githubRepo,
+          githubRepo: githubRepo.trim() || undefined,
           githubToken: githubToken || undefined, // Only send if not empty
-          githubBranch
+          githubBranch: githubBranch.trim() || undefined,
+          customApkUrl: customApkUrl.trim() || undefined
         })
       });
 
@@ -969,6 +972,24 @@ export default function SaaSAdminPanel({ gateways, onReload }: SaaSAdminPanelPro
                   {hasToken 
                     ? "🔒 Token securely stored on daemon backend. Leave empty to keep unchanged." 
                     : "🔒 Token is never exposed on frontend. Kept purely server-side."}
+                </span>
+              </div>
+
+              {/* Custom APK URL Field */}
+              <div className="border-t border-slate-100 pt-3 mt-1">
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 flex justify-between">
+                  <span>Custom APK Download URL (Optional)</span>
+                  <span className="text-[9px] text-indigo-500 normal-case font-medium">Overrides default dynamic fallback</span>
+                </label>
+                <input
+                  type="url"
+                  value={customApkUrl}
+                  onChange={(e) => setCustomApkUrl(e.target.value)}
+                  placeholder="https://example.com/downloads/my-custom-sms-os-gateway.apk"
+                  className="w-full bg-white border border-slate-200 rounded-lg text-xs p-2.5 font-mono focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                />
+                <span className="text-[9px] text-slate-400 block mt-1">
+                  If you compile or host your APK elsewhere (e.g. Google Drive, Dropbox, GitHub Releases, or custom storage), enter the absolute URL here. Any user clicking the "Download APK" link will be instantly redirected to this URL.
                 </span>
               </div>
 

@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect } from "react";
+import { Capacitor } from "@capacitor/core";
 import { Gateway, Message, ApiKey, Webhook, WebhookLog, DashboardStats } from "./types";
 import PhoneSimulator from "./components/PhoneSimulator";
 import DeveloperApiDocs from "./components/DeveloperApiDocs";
@@ -12,6 +13,7 @@ import SmsDispatcher from "./components/SmsDispatcher";
 import SmsLogs from "./components/SmsLogs";
 import GatewayManager from "./components/GatewayManager";
 import SaaSAdminPanel from "./components/SaaSAdminPanel";
+import MobileGatewayAgent from "./components/MobileGatewayAgent";
 
 import { 
   Smartphone, 
@@ -36,6 +38,14 @@ import {
 } from "lucide-react";
 
 export default function App() {
+  const isApkMode = Capacitor.isNativePlatform() || 
+                    Capacitor.getPlatform() === 'android' || 
+                    localStorage.getItem('mode_apk') === 'true';
+
+  if (isApkMode) {
+    return <MobileGatewayAgent />;
+  }
+
   const [activeTab, setActiveTab] = useState<'gateways' | 'dispatcher' | 'logs' | 'webhooks' | 'developer' | 'admin'>('gateways');
   const [showSimulator, setShowSimulator] = useState<boolean>(true);
   const [isResetting, setIsResetting] = useState<boolean>(false);

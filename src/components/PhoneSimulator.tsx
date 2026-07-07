@@ -517,6 +517,23 @@ async function pollAndBroadcastSms() {
                 </p>
               </div>
             </div>
+
+            {/* Live Web Preview of the APK client UI */}
+            <div className="bg-indigo-950/30 border border-indigo-900/40 p-3.5 rounded-xl text-center mt-1">
+              <h6 className="text-[11px] font-bold text-indigo-300 uppercase tracking-wider">Live Gateway Agent UI Preview</h6>
+              <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">
+                Curious what the actual compiled Android APK looks like on a physical phone? Toggle the view to inspect and test the standalone Gateway Agent (The Muscle) client:
+              </p>
+              <button
+                onClick={() => {
+                  localStorage.setItem("mode_apk", "true");
+                  window.location.reload();
+                }}
+                className="mt-2.5 w-full bg-slate-900 hover:bg-slate-850 text-indigo-400 hover:text-indigo-300 font-bold text-[10px] py-1.5 px-3 rounded-lg border border-indigo-500/20 transition-all cursor-pointer"
+              >
+                Toggle Browser view to Mobile APK Client UI
+              </button>
+            </div>
           </div>
         </div>
       ) : (

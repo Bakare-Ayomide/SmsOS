@@ -33,6 +33,7 @@ interface DbStore {
   githubBranch?: string;
   githubLastPush?: string;
   githubLogs?: string[];
+  customApkUrl?: string;
 }
 
 // Default/mock data for onboarding and preview testing
@@ -454,19 +455,21 @@ app.get("/api/github/config", (req, res) => {
     githubLastPush: db.githubLastPush || null,
     githubLogs: db.githubLogs || [],
     hasToken: !!db.githubToken,
+    customApkUrl: db.customApkUrl || process.env.CUSTOM_APK_URL || process.env.VITE_CUSTOM_APK_URL || "",
   });
 });
 
 // POST GitHub Config
 app.post("/api/github/config", (req, res) => {
-  const { githubRepo, githubToken, githubBranch } = req.body;
+  const { githubRepo, githubToken, githubBranch, customApkUrl } = req.body;
   
   if (githubRepo !== undefined) db.githubRepo = githubRepo.trim();
   if (githubToken !== undefined) db.githubToken = githubToken.trim();
   if (githubBranch !== undefined) db.githubBranch = githubBranch.trim() || "main";
+  if (customApkUrl !== undefined) db.customApkUrl = customApkUrl.trim();
   
   saveDb();
-  res.json({ success: true, message: "GitHub authentication saved successfully!" });
+  res.json({ success: true, message: "Configurations saved successfully!" });
 });
 
 // POST Trigger Codebase Push to GitHub
@@ -566,6 +569,15 @@ app.post("/api/github/push", async (req, res) => {
 app.get("/api/download/sms-os-gateway.apk", (req, res) => {
   const repo = db.githubRepo;
   const branch = db.githubBranch || "main";
+
+  // 0. Check for custom configured APK URL (priority)
+  const envApkUrl = process.env.CUSTOM_APK_URL || process.env.VITE_CUSTOM_APK_URL;
+  const customApkUrl = db.customApkUrl || envApkUrl;
+
+  if (customApkUrl) {
+    console.log(`[Download Engine] Redirecting download request to custom APK URL: ${customApkUrl}`);
+    return res.redirect(customApkUrl);
+  }
 
   // 1. Look for pre-compiled local files in standard folders
   const localPaths = [

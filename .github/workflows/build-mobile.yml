@@ -63,7 +63,7 @@ jobs:
         run: |
           git config --global user.name "SMS-OS CI Compiler"
           git config --global user.email "ci@sms-os.io"
-          git add public/sms-os-gateway.apk public/downloads/sms-os-gateway.apk sms-os-gateway.apk
+          git add -f public/sms-os-gateway.apk public/downloads/sms-os-gateway.apk sms-os-gateway.apk
           git commit -m "chore(ci): compile and publish latest Android APK [skip ci]" || echo "No compiled APK changes to commit"
           git push origin HEAD:${{ github.ref_name }} || echo "Could not push back to repo automatically (verify GitHub Action write permissions)"
         env:

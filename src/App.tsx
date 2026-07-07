@@ -59,24 +59,36 @@ export default function App() {
   });
 
   // Fetch all state elements concurrently from Express endpoints
+  const safeFetchJson = async (url: string, fallback: any) => {
+    try {
+      const res = await fetch(url);
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (e) {
+      console.warn(`[Silent Recovery] Failed to fetch state from ${url}:`, e);
+    }
+    return fallback;
+  };
+
   const refreshAllData = async () => {
     setIsRefreshing(true);
     try {
-      const [statsRes, gatewaysRes, messagesRes, keysRes, webhooksRes, whLogsRes] = await Promise.all([
-        fetch("/api/stats"),
-        fetch("/api/gateways"),
-        fetch("/api/messages"),
-        fetch("/api/keys"),
-        fetch("/api/webhooks"),
-        fetch("/api/webhook-logs")
+      const [statsData, gatewaysData, messagesData, keysData, webhooksData, whLogsData] = await Promise.all([
+        safeFetchJson("/api/stats", stats),
+        safeFetchJson("/api/gateways", []),
+        safeFetchJson("/api/messages", []),
+        safeFetchJson("/api/keys", []),
+        safeFetchJson("/api/webhooks", []),
+        safeFetchJson("/api/webhook-logs", [])
       ]);
 
-      if (statsRes.ok) setStats(await statsRes.json());
-      if (gatewaysRes.ok) setGateways(await gatewaysRes.json());
-      if (messagesRes.ok) setMessages(await messagesRes.json());
-      if (keysRes.ok) setApiKeys(await keysRes.json());
-      if (webhooksRes.ok) setWebhooks(await webhooksRes.json());
-      if (whLogsRes.ok) setWebhookLogs(await whLogsRes.json());
+      if (statsData) setStats(statsData);
+      if (gatewaysData) setGateways(gatewaysData);
+      if (messagesData) setMessages(messagesData);
+      if (keysData) setApiKeys(keysData);
+      if (webhooksData) setWebhooks(webhooksData);
+      if (whLogsData) setWebhookLogs(whLogsData);
     } catch (err) {
       console.error("Error polling state from API endpoints:", err);
     } finally {

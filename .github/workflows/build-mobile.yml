@@ -35,13 +35,13 @@ jobs:
           NODE_ENV: production
           VITE_API_SERVER_URL: ${{ secrets.SaaS_API_SERVER_URL }}
 
-      - name: Install Capacitor CLI & Platform
-        run: |
-          npm install -g @capacitor/cli @capacitor/core @capacitor/android
-
       - name: Add Android Native Platform
         run: |
-          npx cap add android || echo "Android platform folder might already be present"
+          if [ ! -d "android" ]; then
+            npx cap add android
+          else
+            echo "Android platform folder already exists. Proceeding..."
+          fi
 
       - name: Sync Web Directory with Android Container
         run: npx cap sync android

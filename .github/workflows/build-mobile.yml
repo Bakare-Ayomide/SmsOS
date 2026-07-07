@@ -38,10 +38,10 @@ jobs:
       - name: Install Capacitor CLI & Platform
         run: |
           npm install -g @capacitor/cli @capacitor/core @capacitor/android
-          npx cap init "Android Cellular SMS Gateway" "com.smsgateway.saas.client" --web-dir=dist
 
       - name: Add Android Native Platform
-        run: npx cap add android
+        run: |
+          npx cap add android || echo "Android platform folder might already be present"
 
       - name: Sync Web Directory with Android Container
         run: npx cap sync android
